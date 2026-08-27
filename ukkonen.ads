@@ -1,13 +1,6 @@
 with Ada.Strings.Unbounded;
 with Ada.Containers.Vectors;
 
--- Package: Ukkonen
--- Description: Implementation of Ukkonen's Algorithm for Suffix Tree Construction.
--- Note on Variants: Ukkonen's algorithm is an *online* string algorithm, meaning 
--- it processes string dynamically character by character (Dynamic/Online variant). 
--- Preemptive/Non-preemptive variants apply to CPU schedulers, not string algorithms. 
--- However, we implement both the Online (incremental) variant and provide 
--- structural boundaries for Static validation (via Contains_Substring).
 package Ukkonen is
    type Suffix_Tree is private;
 
@@ -15,22 +8,20 @@ package Ukkonen is
    Invalid_Input : exception;
 
    -- Core API
-   -- Initializes and constructs a full suffix tree from a string (Static usage pattern)
    function Build_Suffix_Tree (Text : String) return Suffix_Tree;
-   
-   -- Helper variant: Verifies if a substring exists in O(m) time
    function Contains_Substring (Tree : Suffix_Tree; Substr : String) return Boolean;
 
 private
    use Ada.Strings.Unbounded;
 
-   -- Node indexing and unbounded limits
-   type Node_Index is new Integer;
+   -- Use Natural to allow 0 (Null_Node) and Positive integers (real nodes).
+   -- This resolves the a-convec.ads range check constraint error.
+   subtype Node_Index is Natural;
    Null_Node : constant Node_Index := 0;
    Infinity  : constant Integer := Integer'Last;
 
-   -- Array for O(1) character lookups, representing ASCII edges
-   type Children_Array is array (Character'Val (0) .. Character'Val (127)) of Node_Index;
+   -- Array for O(1) character lookups, spanning all possible characters
+   type Children_Array is array (Character) of Node_Index;
 
    -- Node Structure for Suffix Tree
    type Node is record
@@ -40,13 +31,14 @@ private
       Children    : Children_Array := (others => Null_Node);
    end record;
 
-   -- Vector to handle dynamically sized trees (Online variant capability)
+   -- Vector instantiated with Positive. 
+   -- Extended_Index implicitly aligns perfectly with Natural (0 to limit).
    package Node_Vectors is new Ada.Containers.Vectors (
-      Index_Type   => Node_Index,
+      Index_Type   => Positive,
       Element_Type => Node
    );
 
-   -- Main state structure for Ukkonen's online construction
+   -- Main state structure
    type Suffix_Tree is record
       Text          : Unbounded_String;
       Nodes         : Node_Vectors.Vector;
