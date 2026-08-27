@@ -1,7 +1,6 @@
 package body Ukkonen is
 
    -- Helper: Calculate the length of a specific edge
-   -- If an edge ends in Infinity, it dynamically represents a leaf (Rule 1 implicit extension)
    function Edge_Length (Tree : Suffix_Tree; N_Idx : Node_Index) return Integer is
       N : constant Node := Tree.Nodes.Element (N_Idx);
    begin
